@@ -2,13 +2,13 @@ package cargo
 
 type storager interface {
 	isExist() bool
-	save(string, string) error
+	save(string) error
 }
 
-func newStorage(typ string) storager {
+func newStorage(typ string, params *params) storager {
 	switch typ {
 	case "file":
-		return newFileStorage()
+		return newFileStorage(params)
 	default:
 		return nil
 	}

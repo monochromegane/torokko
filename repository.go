@@ -39,11 +39,11 @@ func (r repository) clone(schema string) error {
 	return cmd.Run()
 }
 
-func (r repository) diffArchive(typ, dest string) error {
+func (r repository) diffArchive(dest, typ string) error {
 	// TODO use native zip, tar, gzip package.
 	switch typ {
 	case "tar.gz":
-		return r.targz(r.diff(), dest)
+		return r.targz(r.diff(), dest+"."+typ)
 	default:
 		return nil
 	}
