@@ -71,7 +71,7 @@ func (r repository) diff() []string {
 	added := strings.Split(string(out), "\n")
 	var files []string
 	for _, a := range added {
-		if a == "" {
+		if a == "" || a == "Would remove Makefile" {
 			continue
 		}
 		files = append(files, strings.TrimPrefix(a, "Would remove "))

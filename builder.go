@@ -1,6 +1,9 @@
 package cargo
 
-import "path/filepath"
+import (
+	"os"
+	"path/filepath"
+)
 
 type builder struct {
 	params *params
@@ -21,6 +24,7 @@ func (b builder) build(dir string) error {
 		volumes:    []string{b.volumeFrom(dir) + ":" + b.volumeTo()},
 		workingDir: b.volumeTo(),
 	})
+	b.addMakefileUnlessExists(dir)
 	_, err := docker.run()
 	if err != nil {
 		return err
@@ -40,4 +44,16 @@ func (b builder) volumeTo() string {
 		b.params.owner(),
 		b.params.repo,
 	)
+}
+
+func (b builder) addMakefileUnlessExists(dir string) {
+	makefile := filepath.Join(b.volumeFrom(dir), "Makefile")
+	if _, err := os.Stat(makefile); err != nil {
+		f, _ := os.Create(makefile)
+		f.WriteString(
+			`build:
+	go get -d ./...
+	go build
+`)
+	}
 }
