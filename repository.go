@@ -8,22 +8,14 @@ import (
 )
 
 type repository struct {
-	remote  string
-	org     string
-	user    string
-	repo    string
-	version string
-	dir     string
+	params *params
+	dir    string
 }
 
-func newRepository(remote, org, user, repo, version, dir string) *repository {
+func newRepository(params *params, dir string) *repository {
 	return &repository{
-		remote:  remote,
-		org:     org,
-		user:    user,
-		repo:    repo,
-		version: version,
-		dir:     dir,
+		params: params,
+		dir:    dir,
 	}
 }
 
@@ -32,7 +24,7 @@ func (r repository) clone(schema string) error {
 		"git",
 		"clone",
 		"--depth=1",
-		"-b", r.version,
+		"-b", r.params.version,
 		r.cloneURL(schema),
 	)
 	cmd.Dir = r.dir
@@ -80,25 +72,17 @@ func (r repository) diff() []string {
 }
 
 func (r repository) path() string {
-	return filepath.Join(r.remote, r.owner(), r.repo)
+	return filepath.Join(r.params.remote, r.params.owner(), r.params.repo)
 }
 
 func (r repository) pwd() string {
-	return filepath.Join(r.dir, r.repo)
-}
-
-func (r repository) owner() string {
-	var owner string
-	if r.org != "" {
-		owner = r.org + "/"
-	}
-	return owner + r.user
+	return filepath.Join(r.dir, r.params.repo)
 }
 
 func (r repository) cloneURL(schema string) string {
 	switch schema {
 	case "https":
-		return fmt.Sprintf("https://%s/%s/%s.git", r.remote, r.owner(), r.repo)
+		return fmt.Sprintf("https://%s/%s/%s.git", r.params.remote, r.params.owner(), r.params.repo)
 	default:
 		return ""
 	}
