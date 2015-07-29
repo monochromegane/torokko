@@ -39,3 +39,7 @@ func (f fileStorage) pathByParams() string {
 		f.params.version,
 	)
 }
+
+func (f fileStorage) get(file string) (string, error) {
+	return filepath.Join(f.pathByParams(), file), nil
+}

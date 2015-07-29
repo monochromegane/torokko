@@ -48,9 +48,17 @@ func (c cargo) build() error {
 	}
 
 	// save
-	err = storage.save(filepath.Join(workspace, "cgotest", "app.tar.gz"))
+	err = storage.save(filepath.Join(workspace, c.params.repo, "app.tar.gz"))
 	if err != nil {
 		return buildError{err}
 	}
 	return nil
+}
+
+func (c cargo) isExist() bool {
+	return newStorage("file", c.params).isExist()
+}
+
+func (c cargo) get() (string, error) {
+	return newStorage("file", c.params).get("app.tar.gz")
 }
