@@ -62,3 +62,12 @@ func (c cargo) isExist() bool {
 func (c cargo) get() (string, error) {
 	return newStorage("file", c.params).get("app.tar.gz")
 }
+
+func (c cargo) downloadFileName() string {
+	return fmt.Sprintf(
+		"%s_%s_%s.tar.gz",
+		c.params.repo,
+		c.params.goos,
+		c.params.goarch,
+	)
+}
