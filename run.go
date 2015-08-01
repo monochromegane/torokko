@@ -8,24 +8,34 @@ import (
 )
 
 func Run() error {
+
+	queue := make(chan *params, 1024)
+
 	r := mux.NewRouter()
-	r.HandleFunc("/{remote}/{user}/{repo}/{goos}/{goarch}/{version}", buildHandler).Methods("POST")
+	r.HandleFunc("/{remote}/{user}/{repo}/{goos}/{goarch}/{version}", storeHandler(queue)).Methods("POST")
 	r.HandleFunc("/{remote}/{user}/{repo}/{goos}/{goarch}/{version}", redirectHandler).Methods("GET")
 	r.HandleFunc("/{remote}/{user}/{repo}/{goos}/{goarch}/{version}/{filename}.tar.gz", downloadHandler).Methods("GET")
 	http.Handle("/", r)
 
+	// start build worker
+	go startWorker(queue, 10)
+
 	return http.ListenAndServe(":8080", nil)
 }
 
-func buildHandler(w http.ResponseWriter, r *http.Request) {
-	err := newCargo(mux.Vars(r)).build()
-	if err != nil {
-		switch err.(type) {
-		case aleadyExistsError:
-			http.Error(w, err.Error(), http.StatusConflict)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+func storeHandler(queue chan *params) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := newCargo(mux.Vars(r)).store(queue)
+		if err != nil {
+			switch err.(type) {
+			case aleadyExistsError:
+				http.Error(w, err.Error(), http.StatusConflict)
+			default:
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
 		}
+		w.WriteHeader(http.StatusAccepted)
 		return
 	}
 }

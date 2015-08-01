@@ -14,6 +14,20 @@ func newCargo(params map[string]string) *cargo {
 	return &cargo{newParams(params)}
 }
 
+func (c cargo) store(queue chan *params) error {
+	storage := newStorage("file", c.params)
+
+	// exist?
+	if storage.isExist() {
+		return aleadyExistsError{}
+	}
+
+	// store in build queue
+	queue <- c.params
+
+	return nil
+}
+
 func (c cargo) build() error {
 
 	var err error
