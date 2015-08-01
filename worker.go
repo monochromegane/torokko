@@ -1,6 +1,11 @@
 package cargo
 
-import "sync"
+import (
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+)
 
 type buildWorker struct {
 	wg    *sync.WaitGroup
@@ -9,9 +14,7 @@ type buildWorker struct {
 
 func (w buildWorker) run() {
 	for params := range w.queue {
-		go func() {
-			cargo{params}.build()
-		}()
+		cargo{params}.build()
 	}
 	w.wg.Done()
 }
@@ -26,5 +29,14 @@ func startWorker(queue chan *params, limit int) {
 			queue: queue,
 		}.run()
 	}
+
+	signalChan := make(chan os.Signal)
+	signal.Notify(signalChan, syscall.SIGQUIT)
+	go func() {
+		for _ = range signalChan {
+			close(queue)
+		}
+	}()
+
 	wg.Wait()
 }

@@ -17,10 +17,11 @@ func Run() error {
 	r.HandleFunc("/{remote}/{user}/{repo}/{goos}/{goarch}/{version}/{filename}.tar.gz", downloadHandler).Methods("GET")
 	http.Handle("/", r)
 
-	// start build worker
-	go startWorker(queue, 10)
+	go http.ListenAndServe(":8080", nil)
 
-	return http.ListenAndServe(":8080", nil)
+	// start build worker
+	startWorker(queue, 10)
+	return nil
 }
 
 func storeHandler(queue chan *params) http.HandlerFunc {
