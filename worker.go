@@ -1,4 +1,4 @@
-package cargo
+package main
 
 import (
 	"os"
