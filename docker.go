@@ -8,7 +8,7 @@ import (
 )
 
 func newDocker(opt *containerOption) *docker {
-	return &docker{opt: opt, client: client()}
+	return &docker{opt: opt, client: socketClient()}
 }
 
 type docker struct {
@@ -84,7 +84,13 @@ func (d docker) inspectContainer(id string) (*dockerclient.Container, error) {
 	return d.client.InspectContainer(id)
 }
 
-func client() *dockerclient.Client {
+func socketClient() *dockerclient.Client {
+	endpoint := "unix:///tmp/docker.sock"
+	client, _ := dockerclient.NewClient(endpoint)
+	return client
+}
+
+func tlsClient() *dockerclient.Client {
 	endpoint := os.Getenv("DOCKER_HOST")
 	path := os.Getenv("DOCKER_CERT_PATH")
 	ca := fmt.Sprintf("%s/ca.pem", path)
