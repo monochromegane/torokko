@@ -31,7 +31,10 @@ func (c cargo) store(queue chan *params) error {
 func (c cargo) build() error {
 
 	var err error
-	workspace, _ := ioutil.TempDir("workspace", "")
+	workspace, err := ioutil.TempDir("workspace", "")
+	if err != nil {
+		return err
+	}
 	fmt.Printf("workspace: %s\n", workspace)
 
 	storage := newStorage(c.params)
