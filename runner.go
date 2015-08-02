@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"path"
 
@@ -17,7 +18,7 @@ func Run() error {
 	r.HandleFunc("/{remote}/{user}/{repo}/{goos}/{goarch}/{version}/{filename}.tar.gz", downloadHandler).Methods("GET")
 	http.Handle("/", r)
 
-	go http.ListenAndServe(":8080", nil)
+	go http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 
 	// start build worker
 	startWorker(queue, 10)

@@ -6,9 +6,9 @@ type storager interface {
 	get(string) (string, error)
 }
 
-func newStorage(typ string, params *params) storager {
-	switch typ {
-	case "file":
+func newStorage(params *params) storager {
+	switch storage {
+	case "filesystem":
 		return newFileStorage(params)
 	default:
 		return nil

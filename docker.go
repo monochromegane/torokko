@@ -2,13 +2,12 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	dockerclient "github.com/fsouza/go-dockerclient"
 )
 
 func newDocker(opt *containerOption) *docker {
-	return &docker{opt: opt, client: socketClient()}
+	return &docker{opt: opt, client: client()}
 }
 
 type docker struct {
@@ -84,18 +83,19 @@ func (d docker) inspectContainer(id string) (*dockerclient.Container, error) {
 	return d.client.InspectContainer(id)
 }
 
-func socketClient() *dockerclient.Client {
-	endpoint := "unix:///tmp/docker.sock"
-	client, _ := dockerclient.NewClient(endpoint)
-	return client
+func client() *dockerclient.Client {
+	if dockerCertPath != "" {
+		return tlsClient()
+	} else {
+		client, _ := dockerclient.NewClient(dockerHost)
+		return client
+	}
 }
 
 func tlsClient() *dockerclient.Client {
-	endpoint := os.Getenv("DOCKER_HOST")
-	path := os.Getenv("DOCKER_CERT_PATH")
-	ca := fmt.Sprintf("%s/ca.pem", path)
-	cert := fmt.Sprintf("%s/cert.pem", path)
-	key := fmt.Sprintf("%s/key.pem", path)
-	client, _ := dockerclient.NewTLSClient(endpoint, cert, key, ca)
+	ca := fmt.Sprintf("%s/ca.pem", dockerCertPath)
+	cert := fmt.Sprintf("%s/cert.pem", dockerCertPath)
+	key := fmt.Sprintf("%s/key.pem", dockerCertPath)
+	client, _ := dockerclient.NewTLSClient(dockerHost, cert, key, ca)
 	return client
 }

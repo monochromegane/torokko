@@ -15,7 +15,7 @@ func newCargo(params map[string]string) *cargo {
 }
 
 func (c cargo) store(queue chan *params) error {
-	storage := newStorage("file", c.params)
+	storage := newStorage(c.params)
 
 	// exist?
 	if storage.isExist() {
@@ -34,7 +34,7 @@ func (c cargo) build() error {
 	workspace, _ := ioutil.TempDir("workspace", "")
 	fmt.Printf("workspace: %s\n", workspace)
 
-	storage := newStorage("file", c.params)
+	storage := newStorage(c.params)
 
 	// exist?
 	if storage.isExist() {
@@ -70,11 +70,11 @@ func (c cargo) build() error {
 }
 
 func (c cargo) isExist() bool {
-	return newStorage("file", c.params).isExist()
+	return newStorage(c.params).isExist()
 }
 
 func (c cargo) get() (string, error) {
-	return newStorage("file", c.params).get("app.tar.gz")
+	return newStorage(c.params).get("app.tar.gz")
 }
 
 func (c cargo) downloadFileName() string {
