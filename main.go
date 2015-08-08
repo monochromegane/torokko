@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 )
 
 var (
@@ -14,7 +15,8 @@ var (
 )
 
 func init() {
-	flag.IntVar(&port, "port", 8080, "port number")
+	defaultPort, _ := strconv.Atoi(os.Getenv("PORT"))
+	flag.IntVar(&port, "port", defaultPort, "port number")
 	flag.StringVar(&storage, "storage", "filesystem", "storage type")
 	flag.StringVar(&dockerHost, "docker-host", os.Getenv("DOCKER_HOST"), "docker host")
 	flag.StringVar(&dockerCertPath, "docker-cert-path", os.Getenv("DOCKER_CERT_PATH"), "docker cert path")
