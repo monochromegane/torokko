@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type repository struct {
@@ -28,7 +29,23 @@ func (r repository) clone(schema string) error {
 		r.cloneURL(schema),
 	)
 	cmd.Dir = r.dir
-	return cmd.Run()
+
+	err := cmd.Start()
+	if err != nil {
+		return err
+	}
+
+	// kill process if token is invalid (wait password)
+	var timer *time.Timer
+	timer = time.AfterFunc(30*time.Second, func() {
+		cmd.Process.Kill()
+	})
+	err = cmd.Wait()
+	if err != nil {
+		return err
+	}
+	timer.Stop()
+	return err
 }
 
 func (r repository) diffArchive(dest, typ string) error {
@@ -81,6 +98,34 @@ func (r repository) path() string {
 
 func (r repository) pwd() string {
 	return filepath.Join(r.dir, r.params.repo)
+}
+
+func (r repository) listRemote() error {
+	cmd := exec.Command(
+		"git",
+		"ls-remote",
+		"-h",
+		r.cloneURL("https"),
+		"HEAD",
+	)
+	cmd.Dir = r.dir
+
+	err := cmd.Start()
+	if err != nil {
+		return err
+	}
+
+	// kill process if token is invalid (wait password)
+	var timer *time.Timer
+	timer = time.AfterFunc(5*time.Second, func() {
+		cmd.Process.Kill()
+	})
+	err = cmd.Wait()
+	if err != nil {
+		return err
+	}
+	timer.Stop()
+	return err
 }
 
 func (r repository) cloneURL(schema string) string {

@@ -92,6 +92,15 @@ func (c cargo) isExist() bool {
 	return newStorage(c.params).isExist()
 }
 
+func (c cargo) isAuthorized() bool {
+	repo := newRepository(c.params, "")
+	err := repo.listRemote()
+	if err != nil {
+		return false
+	}
+	return true
+}
+
 func (c cargo) get() (string, error) {
 	return newStorage(c.params).get("app.tar.gz")
 }

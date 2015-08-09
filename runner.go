@@ -56,7 +56,7 @@ func redirectHandler(w http.ResponseWriter, r *http.Request) {
 
 func downloadHandler(w http.ResponseWriter, r *http.Request) {
 	cargo := newCargo(newParams(mux.Vars(r), r.Header.Get("Authorization")))
-	if !cargo.isExist() {
+	if !cargo.isExist() || !cargo.isAuthorized() {
 		http.NotFound(w, r)
 		return
 	}
