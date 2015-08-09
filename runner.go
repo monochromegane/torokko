@@ -27,7 +27,7 @@ func Run() error {
 
 func storeHandler(queue chan *params) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := newCargo(newParams(mux.Vars(r))).store(queue)
+		err := newCargo(newParams(mux.Vars(r), r.Header.Get("Authorization"))).store(queue)
 		if err != nil {
 			switch err.(type) {
 			case aleadyExistsError:
@@ -43,7 +43,7 @@ func storeHandler(queue chan *params) http.HandlerFunc {
 }
 
 func redirectHandler(w http.ResponseWriter, r *http.Request) {
-	cargo := newCargo(newParams(mux.Vars(r)))
+	cargo := newCargo(newParams(mux.Vars(r), r.Header.Get("Authorization")))
 	if !cargo.isExist() {
 		http.NotFound(w, r)
 		return
@@ -55,7 +55,7 @@ func redirectHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func downloadHandler(w http.ResponseWriter, r *http.Request) {
-	cargo := newCargo(newParams(mux.Vars(r)))
+	cargo := newCargo(newParams(mux.Vars(r), r.Header.Get("Authorization")))
 	if !cargo.isExist() {
 		http.NotFound(w, r)
 		return

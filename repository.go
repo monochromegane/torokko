@@ -86,7 +86,11 @@ func (r repository) pwd() string {
 func (r repository) cloneURL(schema string) string {
 	switch schema {
 	case "https":
-		return fmt.Sprintf("https://%s/%s/%s.git", r.params.remote, r.params.owner(), r.params.repo)
+		token := r.params.token
+		if token != "" {
+			token = token + "@"
+		}
+		return fmt.Sprintf("https://%s%s/%s/%s.git", token, r.params.remote, r.params.owner(), r.params.repo)
 	default:
 		return ""
 	}

@@ -1,5 +1,7 @@
 package main
 
+import "strings"
+
 type params struct {
 	params  map[string]string
 	remote  string
@@ -9,9 +11,10 @@ type params struct {
 	goos    string
 	goarch  string
 	version string
+	token   string
 }
 
-func newParams(p map[string]string) *params {
+func newParams(p map[string]string, token string) *params {
 	return &params{
 		params:  p,
 		remote:  p["remote"],
@@ -21,6 +24,7 @@ func newParams(p map[string]string) *params {
 		goos:    p["goos"],
 		goarch:  p["goarch"],
 		version: p["version"],
+		token:   parseToken(token),
 	}
 }
 
@@ -30,4 +34,12 @@ func (p params) owner() string {
 		owner = p.org + "/"
 	}
 	return owner + p.user
+}
+
+func parseToken(token string) string {
+	splited := strings.Split(token, " ")
+	if len(splited) > 1 {
+		return splited[1]
+	}
+	return token
 }
