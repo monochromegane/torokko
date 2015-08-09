@@ -30,7 +30,7 @@ func (f fileStorage) save(from string) error {
 
 func (f fileStorage) pathByParams() string {
 	return filepath.Join(
-		"storage",
+		storageDir,
 		f.params.remote,
 		f.params.owner(),
 		f.params.repo,

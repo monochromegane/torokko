@@ -41,7 +41,7 @@ func (c cargo) store(queue chan *params) error {
 func (c cargo) build() error {
 
 	var err error
-	workspace, err := ioutil.TempDir("workspace", "")
+	workspace, err := ioutil.TempDir(tempDir, "")
 	if err != nil {
 		return err
 	}

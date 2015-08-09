@@ -14,6 +14,8 @@ var (
 	dockerHost     string
 	dockerCertPath string
 	logFile        string
+	tempDir        string
+	storageDir     string
 )
 
 func init() {
@@ -23,6 +25,8 @@ func init() {
 	flag.StringVar(&dockerHost, "docker-host", os.Getenv("DOCKER_HOST"), "docker host")
 	flag.StringVar(&dockerCertPath, "docker-cert-path", os.Getenv("DOCKER_CERT_PATH"), "docker cert path")
 	flag.StringVar(&logFile, "logfile", "", "log file path")
+	flag.StringVar(&tempDir, "temp-dir", "workspace", "temporary dir")
+	flag.StringVar(&storageDir, "storage-dir", "storage", "storage dir")
 	flag.Parse()
 
 	log.SetFormatter(&log.JSONFormatter{})
