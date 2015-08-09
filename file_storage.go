@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 )
@@ -25,7 +26,7 @@ func (f fileStorage) save(from string) error {
 	if err := os.MkdirAll(f.pathByParams(), 0755); err != nil {
 		return err
 	}
-	return os.Rename(from, filepath.Join(f.pathByParams(), path.Base(from)))
+	return exec.Command("mv", from, filepath.Join(f.pathByParams(), path.Base(from))).Run()
 }
 
 func (f fileStorage) pathByParams() string {
