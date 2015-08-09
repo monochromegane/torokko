@@ -84,6 +84,7 @@ func (c cargo) build() error {
 		c.logger.Warnf("save error: %v", err)
 		return buildError{err}
 	}
+	c.logger.Info("build success")
 	return nil
 }
 
