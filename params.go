@@ -1,6 +1,7 @@
 package main
 
 type params struct {
+	params  map[string]string
 	remote  string
 	org     string
 	user    string
@@ -12,6 +13,7 @@ type params struct {
 
 func newParams(p map[string]string) *params {
 	return &params{
+		params:  p,
 		remote:  p["remote"],
 		org:     p["org"],
 		user:    p["user"],

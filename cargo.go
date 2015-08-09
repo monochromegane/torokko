@@ -4,14 +4,23 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 type cargo struct {
 	params *params
+	logger *log.Entry
 }
 
-func newCargo(params map[string]string) *cargo {
-	return &cargo{newParams(params)}
+func newCargo(params *params) *cargo {
+	log := log.WithFields(log.Fields{
+		"params": params.params,
+	})
+	return &cargo{
+		params: params,
+		logger: log,
+	}
 }
 
 func (c cargo) store(queue chan *params) error {
@@ -24,6 +33,7 @@ func (c cargo) store(queue chan *params) error {
 
 	// store in build queue
 	queue <- c.params
+	c.logger.Info("stored")
 
 	return nil
 }
@@ -35,12 +45,13 @@ func (c cargo) build() error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("workspace: %s\n", workspace)
+	c.logger.Infof("build start on %s", workspace)
 
 	storage := newStorage(c.params)
 
 	// exist?
 	if storage.isExist() {
+		c.logger.Warn("already exists")
 		return aleadyExistsError{}
 	}
 
@@ -48,6 +59,7 @@ func (c cargo) build() error {
 	repo := newRepository(c.params, workspace)
 	err = repo.clone("https")
 	if err != nil {
+		c.logger.Warnf("git clone error: %v", err)
 		return buildError{err}
 	}
 
@@ -55,18 +67,21 @@ func (c cargo) build() error {
 	builder := newBuilder(c.params)
 	err = builder.build(workspace)
 	if err != nil {
+		c.logger.Warnf("build error: %v", err)
 		return buildError{err}
 	}
 
 	// diff archive
 	err = repo.diffArchive("app", "tar.gz")
 	if err != nil {
+		c.logger.Warnf("diff archive error: %v", err)
 		return buildError{err}
 	}
 
 	// save
 	err = storage.save(filepath.Join(workspace, c.params.repo, "app.tar.gz"))
 	if err != nil {
+		c.logger.Warnf("save error: %v", err)
 		return buildError{err}
 	}
 	return nil

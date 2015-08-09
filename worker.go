@@ -14,7 +14,7 @@ type buildWorker struct {
 
 func (w buildWorker) run() {
 	for params := range w.queue {
-		cargo{params}.build()
+		newCargo(params).build()
 	}
 	w.wg.Done()
 }

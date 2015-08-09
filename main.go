@@ -2,9 +2,10 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"strconv"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 var (
@@ -15,6 +16,9 @@ var (
 )
 
 func init() {
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetOutput(os.Stderr)
+
 	defaultPort, _ := strconv.Atoi(os.Getenv("PORT"))
 	flag.IntVar(&port, "port", defaultPort, "port number")
 	flag.StringVar(&storage, "storage", "filesystem", "storage type")
@@ -26,6 +30,6 @@ func init() {
 func main() {
 	err := Run()
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
+		log.Error(err)
 	}
 }

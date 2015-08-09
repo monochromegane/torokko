@@ -1,18 +1,24 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 
+	log "github.com/Sirupsen/logrus"
 	dockerclient "github.com/fsouza/go-dockerclient"
 )
 
 func newDocker(opt *containerOption) *docker {
-	return &docker{opt: opt, client: client()}
+	log := log.WithFields(log.Fields{
+		"opt": opt.toLog(),
+	})
+	return &docker{opt: opt, client: client(), logger: log}
 }
 
 type docker struct {
 	opt    *containerOption
 	client *dockerclient.Client
+	logger *log.Entry
 }
 
 type containerOption struct {
@@ -21,6 +27,16 @@ type containerOption struct {
 	cmd        []string
 	volumes    []string
 	workingDir string
+}
+
+func (c containerOption) toLog() map[string]interface{} {
+	return map[string]interface{}{
+		"image":      c.image,
+		"env":        c.env,
+		"cmd":        c.cmd,
+		"volumes":    c.volumes,
+		"workingDir": c.workingDir,
+	}
 }
 
 func (d docker) run() (int, error) {
@@ -35,6 +51,11 @@ func (d docker) run() (int, error) {
 	}
 
 	status, err := d.waitContainer(con.ID)
+	if err != nil {
+		return 0, err
+	}
+
+	err = d.loggingContainerLog(con.ID)
 	if err != nil {
 		return 0, err
 	}
@@ -81,6 +102,23 @@ func (d docker) removeContainer(id string) error {
 
 func (d docker) inspectContainer(id string) (*dockerclient.Container, error) {
 	return d.client.InspectContainer(id)
+}
+
+func (d docker) loggingContainerLog(id string) error {
+	buf := &bytes.Buffer{}
+	err := d.client.Logs(dockerclient.LogsOptions{
+		Container:    id,
+		OutputStream: buf,
+		ErrorStream:  buf,
+		Stdout:       true,
+		Stderr:       true,
+		Follow:       false,
+	})
+	if err != nil {
+		return err
+	}
+	d.logger.Infof("container log (%s): %v", id, buf.String())
+	return nil
 }
 
 func client() *dockerclient.Client {

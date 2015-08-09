@@ -32,10 +32,14 @@ func (r repository) clone(schema string) error {
 }
 
 func (r repository) diffArchive(dest, typ string) error {
+	diff := r.diff()
+	if len(diff) == 0 {
+		return fmt.Errorf("can't find artifacts")
+	}
 	// TODO use native zip, tar, gzip package.
 	switch typ {
 	case "tar.gz":
-		return r.targz(r.diff(), dest+"."+typ)
+		return r.targz(diff, dest+"."+typ)
 	default:
 		return nil
 	}
