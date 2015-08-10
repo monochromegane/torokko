@@ -1,9 +1,12 @@
 package main
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -23,19 +26,20 @@ func newCargo(params *params) *cargo {
 	}
 }
 
-func (c cargo) store(queue chan *params) error {
+func (c cargo) store(queue chan *params) (string, error) {
 	storage := newStorage(c.params)
 
 	// exist?
 	if storage.isExist() {
-		return aleadyExistsError{}
+		return "", aleadyExistsError{}
 	}
 
 	// store in build queue
+	c.params.buildId = c.genBuildId()
 	queue <- c.params
 	c.logger.Info("stored")
 
-	return nil
+	return c.params.buildId, nil
 }
 
 func (c cargo) build() error {
@@ -112,4 +116,19 @@ func (c cargo) downloadFileName() string {
 		c.params.goos,
 		c.params.goarch,
 	)
+}
+
+func (c cargo) genBuildId() string {
+	source := fmt.Sprintf("%s/%s/%s/%s/%s/%s+%s",
+		c.params.remote,
+		c.params.owner(),
+		c.params.repo,
+		c.params.goos,
+		c.params.goarch,
+		c.params.version,
+		time.Now().Format("20060102150405"),
+	)
+	hasher := md5.New()
+	hasher.Write([]byte(source))
+	return hex.EncodeToString(hasher.Sum(nil))
 }

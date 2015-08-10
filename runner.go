@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"path"
@@ -27,7 +28,7 @@ func Run() error {
 
 func storeHandler(queue chan *params) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := newCargo(newParams(mux.Vars(r), r.Header.Get("Authorization"))).store(queue)
+		buildId, err := newCargo(newParams(mux.Vars(r), r.Header.Get("Authorization"))).store(queue)
 		if err != nil {
 			switch err.(type) {
 			case aleadyExistsError:
@@ -37,7 +38,14 @@ func storeHandler(queue chan *params) http.HandlerFunc {
 			}
 			return
 		}
+		json, err := json.Marshal(map[string]string{"build_id": buildId})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		w.WriteHeader(http.StatusAccepted)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(json)
 		return
 	}
 }

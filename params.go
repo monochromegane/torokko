@@ -12,6 +12,7 @@ type params struct {
 	goarch  string
 	version string
 	token   string
+	buildId string
 }
 
 func newParams(p map[string]string, token string) *params {
