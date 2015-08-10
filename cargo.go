@@ -109,7 +109,7 @@ func (c *cargo) setBuildLogger(f *os.File) {
 	var logger = log.New()
 	logger.Formatter = &log.JSONFormatter{}
 	logger.Out = f
-	c.logger = logger.WithFields(log.Fields{"buildId": c.params.buildId})
+	c.logger = logger.WithFields(log.Fields{"build_id": c.params.buildId})
 }
 
 func (c cargo) openBuildLog() (*os.File, error) {

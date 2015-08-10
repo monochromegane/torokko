@@ -129,8 +129,8 @@ func (d docker) loggingContainerLog(id string) error {
 	}
 	d.logger.WithFields(log.Fields{
 		"container": id,
-		"command":   "/containers/logs",
-		"args":      []string{"GET", fmt.Sprintf("/%s/logs", id)},
+		"command":   "/containers/(id)/logs",
+		"args":      []string{"GET", fmt.Sprintf("/containers/%s/logs", id)},
 		"stdout":    stdout.String(),
 		"stderr":    stderr.String(),
 	}).Info("logging container...")
