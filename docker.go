@@ -8,11 +8,8 @@ import (
 	dockerclient "github.com/fsouza/go-dockerclient"
 )
 
-func newDocker(opt *containerOption) *docker {
-	log := log.WithFields(log.Fields{
-		"opt": opt.toLog(),
-	})
-	return &docker{opt: opt, client: client(), logger: log}
+func newDocker(opt *containerOption, logger *log.Entry) *docker {
+	return &docker{opt: opt, client: client(), logger: logger}
 }
 
 type docker struct {
@@ -40,28 +37,40 @@ func (c containerOption) toLog() map[string]interface{} {
 }
 
 func (d docker) run() (int, error) {
+
+	d.logger.Info("creating container...")
 	con, err := d.createContainer()
 	if err != nil {
+		d.logger.Warnf("creating container error: %v", err)
 		return 0, err
 	}
 
+	log := d.logger.WithField("container", con.ID)
+
+	log.Info("starting container...")
 	err = d.startContainer(con.ID)
 	if err != nil {
+		log.Warnf("starting container error: %v", err)
 		return 0, err
 	}
 
+	log.Info("waiting container...")
 	status, err := d.waitContainer(con.ID)
 	if err != nil {
+		log.Warnf("waiting container error: %v", err)
 		return 0, err
 	}
 
 	err = d.loggingContainerLog(con.ID)
 	if err != nil {
+		log.Warnf("logging container error: %v", err)
 		return 0, err
 	}
 
+	log.Info("removing container...")
 	err = d.removeContainer(con.ID)
 	if err != nil {
+		log.Warnf("removing container error: %v", err)
 		return 0, err
 	}
 	return status, nil
@@ -105,11 +114,12 @@ func (d docker) inspectContainer(id string) (*dockerclient.Container, error) {
 }
 
 func (d docker) loggingContainerLog(id string) error {
-	buf := &bytes.Buffer{}
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
 	err := d.client.Logs(dockerclient.LogsOptions{
 		Container:    id,
-		OutputStream: buf,
-		ErrorStream:  buf,
+		OutputStream: stdout,
+		ErrorStream:  stderr,
 		Stdout:       true,
 		Stderr:       true,
 		Follow:       false,
@@ -117,7 +127,13 @@ func (d docker) loggingContainerLog(id string) error {
 	if err != nil {
 		return err
 	}
-	d.logger.Infof("container log (%s): %v", id, buf.String())
+	d.logger.WithFields(log.Fields{
+		"container": id,
+		"command":   "/containers/logs",
+		"args":      []string{"GET", fmt.Sprintf("/%s/logs", id)},
+		"stdout":    stdout.String(),
+		"stderr":    stderr.String(),
+	}).Info("logging container...")
 	return nil
 }
 

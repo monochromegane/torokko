@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -17,16 +18,10 @@ type cargo struct {
 }
 
 func newCargo(params *params) *cargo {
-	log := log.WithFields(log.Fields{
-		"params": params.params,
-	})
-	return &cargo{
-		params: params,
-		logger: log,
-	}
+	return &cargo{params: params}
 }
 
-func (c cargo) store(queue chan *params) (string, error) {
+func (c *cargo) store(queue chan *params) (string, error) {
 	storage := newStorage(c.params)
 
 	// exist?
@@ -37,59 +32,88 @@ func (c cargo) store(queue chan *params) (string, error) {
 	// store in build queue
 	c.params.buildId = c.genBuildId()
 	queue <- c.params
-	c.logger.Info("stored")
+
+	f, err := c.openBuildLog()
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	c.setBuildLogger(f)
+
+	c.logger.WithFields(
+		log.Fields{"params": c.params.params},
+	).Info("Your build joined a queue.")
 
 	return c.params.buildId, nil
 }
 
 func (c cargo) build() error {
 
-	var err error
+	f, err := c.openBuildLog()
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	c.setBuildLogger(f)
+
 	workspace, err := ioutil.TempDir(tempDir, "")
 	if err != nil {
 		return err
 	}
-	c.logger.Infof("build start on %s", workspace)
+	c.logger.WithField("workspace", filepath.Base(workspace)).Info("Your build started.")
 
 	storage := newStorage(c.params)
 
 	// exist?
+	c.logger.Info("checking binary...")
 	if storage.isExist() {
-		c.logger.Warn("already exists")
+		c.logger.Info("The Binary already exists.")
 		return aleadyExistsError{}
 	}
 
 	// clone
-	repo := newRepository(c.params, workspace)
+	c.logger.Info("cloning repository...")
+	repo := newRepository(c.params, workspace, c.logger)
 	err = repo.clone("https")
 	if err != nil {
-		c.logger.Warnf("git clone error: %v", err)
 		return buildError{err}
 	}
 
 	// build
-	builder := newBuilder(c.params)
+	c.logger.Info("building binary...")
+	builder := newBuilder(c.params, c.logger)
 	err = builder.build(workspace)
 	if err != nil {
-		c.logger.Warnf("build error: %v", err)
 		return buildError{err}
 	}
 
 	// diff archive
+	c.logger.Info("archiving binary...")
 	err = repo.diffArchive("app", "tar.gz")
 	if err != nil {
-		c.logger.Warnf("diff archive error: %v", err)
 		return buildError{err}
 	}
 
 	// save
+	c.logger.Info("saving binary...")
 	err = storage.save(filepath.Join(workspace, c.params.repo, "app.tar.gz"))
 	if err != nil {
-		c.logger.Warnf("save error: %v", err)
 		return buildError{err}
 	}
-	c.logger.Info("build success")
+
+	c.logger.Info("Your build is successful.")
 	return nil
+}
+
+func (c *cargo) setBuildLogger(f *os.File) {
+	var logger = log.New()
+	logger.Formatter = &log.JSONFormatter{}
+	logger.Out = f
+	c.logger = logger.WithFields(log.Fields{"buildId": c.params.buildId})
+}
+
+func (c cargo) openBuildLog() (*os.File, error) {
+	return os.OpenFile(filepath.Join(logDir, c.params.buildId), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 }
 
 func (c cargo) isExist() bool {
@@ -97,7 +121,7 @@ func (c cargo) isExist() bool {
 }
 
 func (c cargo) isAuthorized() bool {
-	repo := newRepository(c.params, "")
+	repo := newRepository(c.params, "", nil)
 	err := repo.listRemote()
 	if err != nil {
 		return false

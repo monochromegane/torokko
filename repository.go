@@ -1,22 +1,27 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 type repository struct {
 	params *params
 	dir    string
+	logger *log.Entry
 }
 
-func newRepository(params *params, dir string) *repository {
+func newRepository(params *params, dir string, logger *log.Entry) *repository {
 	return &repository{
 		params: params,
 		dir:    dir,
+		logger: logger,
 	}
 }
 
@@ -30,8 +35,14 @@ func (r repository) clone(schema string) error {
 	)
 	cmd.Dir = r.dir
 
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
 	err := cmd.Start()
 	if err != nil {
+		r.logger.WithFields(log.Fields{"command": cmd.Path, "args": cmd.Args, "stdout": stdout.String(), "stderr": stderr.String()}).Warnf("git clone error: %v", err)
 		return err
 	}
 
@@ -42,15 +53,18 @@ func (r repository) clone(schema string) error {
 	})
 	err = cmd.Wait()
 	if err != nil {
+		r.logger.WithFields(log.Fields{"command": cmd.Path, "args": cmd.Args, "stdout": stdout.String(), "stderr": stderr.String()}).Warnf("git clone error: %v", err)
 		return err
 	}
 	timer.Stop()
+	r.logger.WithFields(log.Fields{"command": cmd.Path, "args": cmd.Args, "stdout": stdout.String(), "stderr": stderr.String()}).Info("git clone successfully")
 	return err
 }
 
 func (r repository) diffArchive(dest, typ string) error {
 	diff := r.diff()
 	if len(diff) == 0 {
+		r.logger.Warn("archiving error: can't find binary")
 		return fmt.Errorf("can't find artifacts")
 	}
 	// TODO use native zip, tar, gzip package.
@@ -63,10 +77,24 @@ func (r repository) diffArchive(dest, typ string) error {
 }
 
 func (r repository) targz(src []string, dest string) error {
-	params := append(append([]string{}, "czf", dest), src...)
+	params := append(append([]string{}, "czvf", dest), src...)
 	cmd := exec.Command("tar", params...)
 	cmd.Dir = r.pwd()
-	return cmd.Run()
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		r.logger.WithFields(log.Fields{"command": cmd.Path, "args": cmd.Args, "stdout": stdout.String(), "stderr": stderr.String()}).Warnf("archive error: %v", err)
+		return err
+	}
+
+	r.logger.WithFields(log.Fields{"command": cmd.Path, "args": cmd.Args, "stdout": stdout.String(), "stderr": stderr.String()}).Info("archive successfully")
+
+	return nil
 }
 
 func (r repository) cleanWithDryRun() ([]byte, error) {

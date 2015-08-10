@@ -3,14 +3,17 @@ package main
 import (
 	"os"
 	"path/filepath"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 type builder struct {
 	params *params
+	logger *log.Entry
 }
 
-func newBuilder(params *params) *builder {
-	return &builder{params}
+func newBuilder(params *params, logger *log.Entry) *builder {
+	return &builder{params: params, logger: logger}
 }
 
 func (b builder) build(dir string) error {
@@ -23,7 +26,7 @@ func (b builder) build(dir string) error {
 		cmd:        []string{"make"},
 		volumes:    []string{b.volumeFrom(dir) + ":" + b.volumeTo()},
 		workingDir: b.volumeTo(),
-	})
+	}, b.logger)
 	b.addMakefileUnlessExists(dir)
 	_, err := docker.run()
 	if err != nil {
@@ -49,6 +52,7 @@ func (b builder) volumeTo() string {
 func (b builder) addMakefileUnlessExists(dir string) {
 	makefile := filepath.Join(b.volumeFrom(dir), "Makefile")
 	if _, err := os.Stat(makefile); err != nil {
+		b.logger.Info("adding a default Makefile...")
 		f, _ := os.Create(makefile)
 		f.WriteString(
 			`build:
