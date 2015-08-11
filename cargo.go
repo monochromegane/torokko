@@ -121,7 +121,7 @@ func (c cargo) isExist() bool {
 }
 
 func (c cargo) isAuthorized() bool {
-	repo := newRepository(c.params, "", nil)
+	repo := newRepository(c.params, tempDir, nil)
 	err := repo.listRemote()
 	if err != nil {
 		return false

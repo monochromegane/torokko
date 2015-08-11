@@ -132,7 +132,6 @@ func (r repository) listRemote() error {
 	cmd := exec.Command(
 		"git",
 		"ls-remote",
-		"-h",
 		r.cloneURL("https"),
 		"HEAD",
 	)
