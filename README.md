@@ -22,6 +22,7 @@ $ curl -OJL http://cargo-server/{remote}/{owner}/{repo}/{GOOS}/{GOARCH}/{version
 
 ## Overview
 
+![cargo\_overview](https://cloud.githubusercontent.com/assets/1845486/9267701/3510ed7e-428e-11e5-8766-929e8c8915cf.jpg)
 
 ## Endpoints
 
