@@ -1,4 +1,4 @@
-# cargo
+# Cargo
 
 A build proxy server using Docker container for Golang apps.
 
