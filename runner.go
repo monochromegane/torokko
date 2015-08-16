@@ -29,7 +29,7 @@ func Run() error {
 
 func storeHandler(queue chan *params) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		buildId, err := newCargo(newParams(mux.Vars(r), r.Header.Get("Authorization"))).store(queue)
+		buildId, err := newTorokko(newParams(mux.Vars(r), r.Header.Get("Authorization"))).store(queue)
 		if err != nil {
 			switch err.(type) {
 			case aleadyExistsError:
@@ -52,24 +52,24 @@ func storeHandler(queue chan *params) http.HandlerFunc {
 }
 
 func redirectHandler(w http.ResponseWriter, r *http.Request) {
-	cargo := newCargo(newParams(mux.Vars(r), r.Header.Get("Authorization")))
-	if !cargo.isExist() {
+	torokko := newTorokko(newParams(mux.Vars(r), r.Header.Get("Authorization")))
+	if !torokko.isExist() {
 		http.NotFound(w, r)
 		return
 	}
 	http.Redirect(w, r,
-		r.URL.Path+"/"+cargo.downloadFileName(),
+		r.URL.Path+"/"+torokko.downloadFileName(),
 		http.StatusSeeOther,
 	)
 }
 
 func downloadHandler(w http.ResponseWriter, r *http.Request) {
-	cargo := newCargo(newParams(mux.Vars(r), r.Header.Get("Authorization")))
-	if !cargo.isExist() || !cargo.isAuthorized() {
+	torokko := newTorokko(newParams(mux.Vars(r), r.Header.Get("Authorization")))
+	if !torokko.isExist() || !torokko.isAuthorized() {
 		http.NotFound(w, r)
 		return
 	}
-	filepath, err := cargo.get()
+	filepath, err := torokko.get()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

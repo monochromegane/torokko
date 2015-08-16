@@ -37,7 +37,7 @@ func init() {
 
 func main() {
 	if v {
-		fmt.Printf("cargo version %s\n", version)
+		fmt.Printf("Torokko version %s\n", version)
 		os.Exit(0)
 	}
 	err := Run()

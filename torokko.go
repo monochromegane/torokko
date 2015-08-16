@@ -12,16 +12,16 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-type cargo struct {
+type torokko struct {
 	params *params
 	logger *log.Entry
 }
 
-func newCargo(params *params) *cargo {
-	return &cargo{params: params}
+func newTorokko(params *params) *torokko {
+	return &torokko{params: params}
 }
 
-func (c *cargo) store(queue chan *params) (string, error) {
+func (c *torokko) store(queue chan *params) (string, error) {
 	storage := newStorage(c.params)
 
 	// exist?
@@ -47,7 +47,7 @@ func (c *cargo) store(queue chan *params) (string, error) {
 	return c.params.buildId, nil
 }
 
-func (c cargo) build() error {
+func (c torokko) build() error {
 
 	f, err := c.openBuildLog()
 	if err != nil {
@@ -105,22 +105,22 @@ func (c cargo) build() error {
 	return nil
 }
 
-func (c *cargo) setBuildLogger(f *os.File) {
+func (c *torokko) setBuildLogger(f *os.File) {
 	var logger = log.New()
 	logger.Formatter = &log.JSONFormatter{}
 	logger.Out = f
 	c.logger = logger.WithFields(log.Fields{"build_id": c.params.buildId})
 }
 
-func (c cargo) openBuildLog() (*os.File, error) {
+func (c torokko) openBuildLog() (*os.File, error) {
 	return os.OpenFile(filepath.Join(logDir, c.params.buildId), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 }
 
-func (c cargo) isExist() bool {
+func (c torokko) isExist() bool {
 	return newStorage(c.params).isExist()
 }
 
-func (c cargo) isAuthorized() bool {
+func (c torokko) isAuthorized() bool {
 	repo := newRepository(c.params, tempDir, nil)
 	err := repo.listRemote()
 	if err != nil {
@@ -129,11 +129,11 @@ func (c cargo) isAuthorized() bool {
 	return true
 }
 
-func (c cargo) get() (string, error) {
+func (c torokko) get() (string, error) {
 	return newStorage(c.params).get("app.tar.gz")
 }
 
-func (c cargo) downloadFileName() string {
+func (c torokko) downloadFileName() string {
 	return fmt.Sprintf(
 		"%s_%s_%s.tar.gz",
 		c.params.repo,
@@ -142,7 +142,7 @@ func (c cargo) downloadFileName() string {
 	)
 }
 
-func (c cargo) genBuildId() string {
+func (c torokko) genBuildId() string {
 	source := fmt.Sprintf("%s/%s/%s/%s/%s/%s+%s",
 		c.params.remote,
 		c.params.owner(),

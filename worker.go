@@ -14,7 +14,7 @@ type buildWorker struct {
 
 func (w buildWorker) run() {
 	for params := range w.queue {
-		newCargo(params).build()
+		newTorokko(params).build()
 	}
 	w.wg.Done()
 }
