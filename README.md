@@ -1,28 +1,28 @@
-# Cargo
+# Torokko
 
 A build proxy server using Docker container for Golang apps.
 
 ## Quick start
 
-1. Start a cargo server.
+1. Start a torokko server.
 2. Access a build endpoint.
 
 ```sh
-$ curl -X POST http://cargo-server/{remote}/{owner}/{repo}/{GOOS}/{GOARCH}/{version}
-# e.g. http://cargo-server/github.com/monochromegane/cargo/linux/amd64/v0.0.1
+$ curl -X POST http://torokko-server/{remote}/{owner}/{repo}/{GOOS}/{GOARCH}/{version}
+# e.g. http://torokko-server/github.com/monochromegane/torokko/linux/amd64/v0.0.1
 ```
 
 And access a download endpoint after a few minutes :beers:
 
 ```sh
-$ curl -OJL http://cargo-server/{remote}/{owner}/{repo}/{GOOS}/{GOARCH}/{version}
+$ curl -OJL http://torokko-server/{remote}/{owner}/{repo}/{GOOS}/{GOARCH}/{version}
 ```
 
-[Here](http://cargo.monochromegane.com) is a demo API server. Try it now :)
+[Here](http://torokko.monochromegane.com) is a demo API server. Try it now :)
 
 ## Overview
 
-![cargo\_overview](https://cloud.githubusercontent.com/assets/1845486/9277791/5c7020a2-42e7-11e5-8dfc-d109f2f11161.jpg)
+![torokko_overview](https://cloud.githubusercontent.com/assets/1845486/9293092/eba8190c-4457-11e5-9176-19d9f7ac3363.jpg)
 
 ## Endpoints
 
@@ -35,7 +35,7 @@ Build a go binary.
 **Example request:**
 
 ```sh
-$ curl -X POST http://cargo-server/github.com/monochromegane/cargo/linux/amd64/v0.0.1
+$ curl -X POST http://torokko-server/github.com/monochromegane/torokko/linux/amd64/v0.0.1
 ```
 
 - **remote** - Remote repository. (e.g. github.com)
@@ -72,7 +72,7 @@ Get build logs.
 **Example request:**
 
 ```sh
-$ curl http://cargo-server/builds/1a7452d077faed659af0e85731664938/logs
+$ curl http://torokko-server/builds/1a7452d077faed659af0e85731664938/logs
 ```
 
 **Example response:**
@@ -120,10 +120,10 @@ Download a go binary.
 **Example request:**
 
 ```sh
-$ curl -OJL http://cargo-server/github.com/monochromegane/cargo/linux/amd64/v0.0.1
+$ curl -OJL http://torokko-server/github.com/monochromegane/torokko/linux/amd64/v0.0.1
 ```
 
-- Specify `-OJL` option, because cargo server redirect and add `Content-Disposion` header.
+- Specify `-OJL` option, because torokko server redirect and add `Content-Disposion` header.
 - If you use `wget`, try `--content-disposition` option.
 
 
@@ -135,8 +135,8 @@ $ curl -OJL http://cargo-server/github.com/monochromegane/cargo/linux/amd64/v0.0
 
 ## Custom build
 
-Cargo use `make` command for building your app.
-If your repository don't have `Makefile`, Cargo use default Makefile:
+Torokko use `make` command for building your app.
+If your repository don't have `Makefile`, Torokko use default Makefile:
 
 ```make
 build:
@@ -151,27 +151,27 @@ If your app have to customize build step, put a Makefile on your repository.
 If your repository is private, you can add `Authorization: token <TOKEN>` header to build and download requests.
 
 ```sh
-$ curl -H "Authorization: token <TOKEN>" -X POST http://cargo-server/github.com/monochromegane/cargo/linux/amd64/v0.0.1
+$ curl -H "Authorization: token <TOKEN>" -X POST http://torokko-server/github.com/monochromegane/torokko/linux/amd64/v0.0.1
 ```
 
 **Caution**
 
-[Demo API server](http://cargo.monochromegane.com) is **non-SSL** site.
+[Demo API server](http://torokko.monochromegane.com) is **non-SSL** site.
 I don't recommend you use for private repository.
 
 ## Installation
 
 ```sh
-$ go get github.com/monochromegane/cargo
+$ go get github.com/monochromegane/torokko
 ```
 
 ## Requirement
 
-Cargo server require the following.
+Torokko server require the following.
 
 - Docker
 - Docker Remote API
-- Golang build images (Now cargo use `golang:1.4.2-cross`)
+- Golang build images (Now torokko use `golang:1.4.2-cross`)
 - git
 - lsof
 - workspace, log, storage directories.
@@ -197,7 +197,7 @@ Cargo server require the following.
 
 ## License
 
-[MIT](https://github.com/monochromegane/cargo/blob/master/LICENSE)
+[MIT](https://github.com/monochromegane/torokko/blob/master/LICENSE)
 
 ## Author
 
